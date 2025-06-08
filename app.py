@@ -11,19 +11,19 @@ import nltk
 
 try:
     nltk.data.find('corpora/stopwords')
-except nltk.downloader.DownloadError:
+except LookupError:
     nltk.download('stopwords')
 try:
     nltk.data.find('tokenizers/punkt')
-except nltk.downloader.DownloadError:
+except LookupError:
     nltk.download('punkt')
 try:
     nltk.data.find('corpora/wordnet')
-except nltk.downloader.DownloadError:
+except LookupError:
     nltk.download('wordnet')
 try:
     nltk.data.find('taggers/averaged_perceptron_tagger_eng')
-except nltk.downloader.DownloadError:
+except LookupError:
     nltk.download('averaged_perceptron_tagger_eng')
 
 # Load the models
