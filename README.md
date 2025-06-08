@@ -34,6 +34,8 @@ The project was developed following a structured machine learning workflow, focu
     - **Tokenization:** Splitting text into individual words.
     - **Stopword Removal:** Eliminating common English words (e.g., "the", "a", "is") that provide little predictive value.
     - **Lemmatization:** Reducing words to their root form (e.g., "running" -> "run") to consolidate the vocabulary using NLTK's `WordNetLemmatizer`.
+    - **Other preprocessing steps tried:** Also tried to detect type errors in the query text , but the text may contain the product/brand name and since machine will learn like these unique names as type errors, this cleaning step was eliminated.
+
 
 ### 2. Feature Engineering
 The core of this project was converting the cleaned text into meaningful numerical features.
@@ -117,7 +119,7 @@ To run this project locally, please follow these steps:
 
 3.  **Download the Dataset:**
     The data file is not included in the repository. Please download it from the link below and place it in the `data/` directory.
-    - **[Download ai_dev_assignment_tickets_complex_1000.xlsx]([YOUR_GOOGLE_DRIVE_SHARE_LINK])**
+    - **[Download ai_dev_assignment_tickets_complex_1000.xlsx]([https://docs.google.com/spreadsheets/d/1wQeTvEqI4TeQ3c-v8bEEuAc8-oWM1A0K/edit?usp=sharing&ouid=100728351340949217592&rtpof=true&sd=true])**
 
 4.  **Install Dependencies:**
     ```bash
