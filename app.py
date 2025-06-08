@@ -7,6 +7,25 @@ from textblob import TextBlob
 from scipy.sparse import hstack
 import json
 
+import nltk
+
+try:
+    nltk.data.find('corpora/stopwords')
+except nltk.downloader.DownloadError:
+    nltk.download('stopwords')
+try:
+    nltk.data.find('tokenizers/punkt')
+except nltk.downloader.DownloadError:
+    nltk.download('punkt')
+try:
+    nltk.data.find('corpora/wordnet')
+except nltk.downloader.DownloadError:
+    nltk.download('wordnet')
+try:
+    nltk.data.find('taggers/averaged_perceptron_tagger_eng')
+except nltk.downloader.DownloadError:
+    nltk.download('averaged_perceptron_tagger_eng')
+
 # Load the models
 issue_classifier = joblib.load('models/issue_classifier.joblib')
 urgency_classifier = joblib.load('models/urgency_classifier.joblib')
