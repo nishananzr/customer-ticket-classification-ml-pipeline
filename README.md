@@ -119,7 +119,8 @@ To run this project locally, please follow these steps:
 
 3.  **Download the Dataset:**
     The data file is not included in the repository. Please download it from the link below and place it in the `data/` directory.
-    - **[Download ai_dev_assignment_tickets_complex_1000.xlsx]([https://docs.google.com/spreadsheets/d/1wQeTvEqI4TeQ3c-v8bEEuAc8-oWM1A0K/edit?usp=sharing&ouid=100728351340949217592&rtpof=true&sd=true])**
+    - **[Download ai_dev_assignment_tickets_complex_1000.xlsx]**
+    - ([https://docs.google.com/spreadsheets/d/1wQeTvEqI4TeQ3c-v8bEEuAc8-oWM1A0K/edit?usp=sharing&ouid=100728351340949217592&rtpof=true&sd=true])
 
 4.  **Install Dependencies:**
     ```bash
@@ -138,22 +139,4 @@ To run this project locally, please follow these steps:
     python app.py
     ```
     Then, open your web browser to `http://127.0.0.1:7860`.
-
-## File Structure
-
-Use code with caution.
-.
-├── models/
-│ ├── issue_classifier.joblib
-│ ├── urgency_classifier.joblib
-│ ├── tfidf_vectorizer.joblib
-│ └── scaler.joblib
-│ └── product_list.joblib
-├── data/
-│ └── ai_dev_assignment_tickets_complex_1000.xlsx (To be downloaded)
-├── app.py
-├── ticket_classification_analysis.ipynb
-├── requirements.txt
-├── .gitignore
-└── README.md
 
