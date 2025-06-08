@@ -7,36 +7,35 @@ from textblob import TextBlob
 from scipy.sparse import hstack
 import json
 
-# --- 1. NLTK Resource Downloads ---
-try:
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('stopwords')
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-try:
-    nltk.data.find('corpora/wordnet')
-except LookupError:
-    nltk.download('wordnet')
-try:
-    nltk.data.find('taggers/averaged_perceptron_tagger_eng')
-except LookupError:
-    nltk.download('averaged_perceptron_tagger_eng')
+def download_nltk_resources():
+    resources = {
+        "corpora/stopwords": "stopwords",
+        "tokenizers/punkt": "punkt",
+        "corpora/wordnet": "wordnet",
+        "taggers/averaged_perceptron_tagger": "averaged_perceptron_tagger" 
+    }
+    for resource_path, package_name in resources.items():
+        try:
+            nltk.data.find(resource_path)
+        except LookupError:
+            print(f"Downloading NLTK package: {package_name}")
+            nltk.download(package_name)
 
-# --- 2. Load Models and Artifacts ---
+download_nltk_resources()
+
+
+
 issue_classifier = joblib.load('models/issue_classifier.joblib')
 urgency_classifier = joblib.load('models/urgency_classifier.joblib')
 tfidf_vectorizer = joblib.load('models/tfidf_vectorizer.joblib')
 scaler = joblib.load('models/scaler.joblib')
 product_list = joblib.load('models/product_list.joblib')
 
-# --- 3. Initialize NLTK Components ---
+
 lemmatizer = nltk.stem.WordNetLemmatizer()
 stop_words = set(nltk.corpus.stopwords.words('english'))
 
-# --- 4. Helper Functions (from notebook) ---
+
 def preprocess_text(text):
     text = re.sub(r'[^a-zA-Z\s]', '', text, re.I | re.A)
     text = text.lower().strip()
@@ -72,17 +71,13 @@ def extract_entities_advanced(text):
     extracted_entities["complaint_phrases"] = list(complaint_phrases)
     return extracted_entities
 
-# --- 5. Main Prediction Function ---
+
 def process_and_predict(raw_text):
-    # Handle empty or whitespace-only input
     if not raw_text or not raw_text.strip():
         return "N/A", "N/A", {"message": "Please enter some text."}
 
     try:
-        # ML Prediction part
         processed_text_for_model = preprocess_text(raw_text)
-        
-        # Another safety check
         if not processed_text_for_model:
             return "Could not classify", "Could not classify", {"message": "Input text too short after cleaning."}
 
@@ -95,18 +90,16 @@ def process_and_predict(raw_text):
         predicted_issue = issue_classifier.predict(combined_features)[0]
         predicted_urgency = urgency_classifier.predict(combined_features)[0]
         
-        # Entity Extraction part
         entities = extract_entities_advanced(raw_text)
         
         return predicted_issue, predicted_urgency, entities
     
     except Exception as e:
-        # Catch any other unexpected errors and return a helpful message
         error_message = f"An unexpected error occurred: {str(e)}"
-        print(error_message) # This will print to the Hugging Face logs for debugging
+        print(error_message) 
         return "Error", "Error", {"error": error_message}
 
-# --- 6. Gradio Interface Definition ---
+
 if __name__ == "__main__":
     app_interface = gr.Interface(
         fn=process_and_predict,
