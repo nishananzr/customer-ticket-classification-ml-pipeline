@@ -7,8 +7,6 @@ from textblob import TextBlob
 from scipy.sparse import hstack
 import json
 
-import nltk
-
 try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
@@ -26,33 +24,19 @@ try:
 except LookupError:
     nltk.download('averaged_perceptron_tagger_eng')
 
-# Load the models
 issue_classifier = joblib.load('models/issue_classifier.joblib')
 urgency_classifier = joblib.load('models/urgency_classifier.joblib')
-
-# Load the vectorizer and scaler
 tfidf_vectorizer = joblib.load('models/tfidf_vectorizer.joblib')
 scaler = joblib.load('models/scaler.joblib')
-
-# Load the product and keyword lists
 product_list = joblib.load('models/product_list.joblib')
-complaint_keywords = [
-    'broken', 'defective', 'faulty', 'not working', 'working', 'fail', 'failed', 
-    'error', 'crash', 'slow', 'issue', 'problem', 'late', 'delayed', 'missing', 
-    'wrong item', 'incorrect', 'lost', 'damaged', 'unresponsive', 'no response'
-]
 
-
-
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
-lemmatizer = WordNetLemmatizer()
-stop_words = set(stopwords.words('english'))
+lemmatizer = nltk.stem.WordNetLemmatizer()
+stop_words = set(nltk.corpus.stopwords.words('english'))
 
 def preprocess_text(text):
-    text = re.sub(r'[^a-zA-Z\s]', '', text, re.I | re.A).lower().strip()
-    tokens = word_tokenize(text)
+    text = re.sub(r'[^a-zA-Z\s]', '', text, re.I | re.A)
+    text = text.lower().strip()
+    tokens = nltk.word_tokenize(text)
     processed_tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in stop_words and len(word) > 2]
     return " ".join(processed_tokens)
 
@@ -84,14 +68,12 @@ def extract_entities_advanced(text):
     extracted_entities["complaint_phrases"] = list(complaint_phrases)
     return extracted_entities
 
-
-
 def process_and_predict(raw_text):
-    if not raw_text:
-        return None, None, {}
+    if not raw_text or not raw_text.strip():
+        return "", "", pd.DataFrame()
 
-    # ML Prediction part 
     processed_text_for_model = preprocess_text(raw_text)
+    
     text_tfidf = tfidf_vectorizer.transform([processed_text_for_model])
     ticket_len = len(raw_text.split())
     sentiment = TextBlob(raw_text).sentiment.polarity
@@ -101,26 +83,57 @@ def process_and_predict(raw_text):
     predicted_issue = issue_classifier.predict(combined_features)[0]
     predicted_urgency = urgency_classifier.predict(combined_features)[0]
     
-    # Entity Extraction part 
     entities = extract_entities_advanced(raw_text)
     
-    # Return the three outputs for the Gradio interface
-    return predicted_issue, predicted_urgency, entities
+    entity_df_data = []
+    for entity_type, values in entities.items():
+        if values:
+            for value in values:
+                entity_df_data.append({"Entity Type": entity_type.replace('_', ' ').title(), "Value": value})
 
+    entity_df = pd.DataFrame(entity_df_data)
+    if entity_df.empty:
+        entity_df = pd.DataFrame(columns=["Entity Type", "Value"])
 
+    return predicted_issue, predicted_urgency, entity_df
 
-if __name__ == "__main__":
-    app_interface = gr.Interface(
+with gr.Blocks(theme=gr.themes.Soft(), title="Ticket Analyzer") as demo:
+    gr.Markdown("# Customer Support Ticket Analyzer")
+    gr.Markdown("Enter a customer support ticket text to automatically classify its issue type, urgency level, and extract key entities.")
+    
+    with gr.Row():
+        raw_text_input = gr.Textbox(
+            label="Enter Ticket Text Here",
+            lines=8,
+            placeholder="e.g., Payment issue for my FitRun Treadmill. I was not refunded for order #91776."
+        )
+        with gr.Column():
+            issue_output = gr.Label(label="Predicted Issue Type")
+            urgency_output = gr.Label(label="Predicted Urgency Level")
+            entities_output = gr.Dataframe(
+                label="Extracted Entities",
+                headers=["Entity Type", "Value"],
+                interactive=False
+            )
+
+    with gr.Row():
+        clear_btn = gr.Button("Clear")
+        submit_btn = gr.Button("Submit", variant="primary")
+
+    def clear_all():
+        return "", "", "", pd.DataFrame()
+
+    submit_btn.click(
         fn=process_and_predict,
-        inputs=gr.Textbox(lines=8, placeholder="Please enter the customer ticket text here..."),
-        outputs=[
-            gr.Label(label="Predicted Issue Type"),
-            gr.Label(label="Predicted Urgency Level"),
-            gr.JSON(label="Extracted Entities")
-        ],
-        title="Customer Support Ticket Analyzer",
-        description="Enter a customer support ticket text to automatically classify its issue type, urgency level, and extract key entities",
-        allow_flagging="never"
+        inputs=raw_text_input,
+        outputs=[issue_output, urgency_output, entities_output]
+    )
+    
+    clear_btn.click(
+        fn=clear_all,
+        inputs=[],
+        outputs=[raw_text_input, issue_output, urgency_output, entities_output]
     )
 
-    app_interface.launch()
+if __name__ == "__main__":
+    demo.launch()
